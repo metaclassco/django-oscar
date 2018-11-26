@@ -2,7 +2,7 @@
 Statics
 =======
 
-Oscar ships with a set of static files (js/css/less/images).  These are used on
+Oscar ships with a set of static files (js/css/less/scss/images). These are used on
 the sandbox site.  
 
 When building your own project, it is not recommended to use these files
