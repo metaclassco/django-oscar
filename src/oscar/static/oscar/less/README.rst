@@ -8,10 +8,10 @@ corresponding less file::
     styles.less -> styles.css
     dashboard.less -> dashboard.css
 
-Oscar's CSS uses Less files from `Twitter's Bootstrap project`_ - these are housed
+Oscar's CSS uses Less files from the `Bootstrap project`_ - these are housed
 in the bootstrap folder.
 
-.. _`Twitter's Bootstrap project`: http://twitter.github.com/bootstrap/
+.. _`Bootstrap project`: http://getbootstrap.com/
 
 Compiling less
 --------------
