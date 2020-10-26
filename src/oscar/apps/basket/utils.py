@@ -158,22 +158,35 @@ class LineOfferConsumer(object):
 
             applied = [x for x in self.consumers if x != offer]
 
-            # find any *other* exclusive offers
-            if any([x.exclusive for x in applied]):
+            for a in applied:
+                if any([
+                    # Exclusive offers cannot be applied if any other exclusive
+                    # offers with higher priority are active already.
+                    offer.exclusive and a.exclusive and any([
+                        a.priority > offer.priority,
+                        a.priority == offer.priority and a.id < offer.id
+                    ]),
+                    # Non-exclusive offers should respect already applied exclusive
+                    # offers.
+                    not offer.exclusive and a.exclusive,
+                    # Check for applied offers allowing restricted combinations.
+                    not offer.exclusive and not a.exclusive and all([
+                        offer.combinations.count() or a.combinations.count(),
+                        offer not in a.combined_offers,
+                    ]),
+                ]):
+                    max_affected_items -= self.consumed(a)
+
+            # Exclusive offers cannot be applied if any other offers are active already.
+            applied_non_exclusive = [x for x in applied if not x.exclusive]
+            if offer.exclusive and applied_non_exclusive:
+                consumed = [self.consumed(x) for x in applied_non_exclusive]
+                max_affected_items -= max(consumed)
+
+            if max_affected_items == 0:
                 return 0
 
-            # exclusive offers cannot be applied if any other
-            # offers are active already
-            if offer.exclusive and len(applied):
-                return 0
-
-            # check for applied offers allowing restricted combinations
-            for x in applied:
-                check = offer.combinations.count() or x.combinations.count()
-                if check and offer not in x.combined_offers:
-                    return 0
-
-            # respect max_affected_items
+            # Respect max_affected_items.
             if offer.benefit.max_affected_items:
                 max_affected_items = min(offer.benefit.max_affected_items, max_affected_items)
 
