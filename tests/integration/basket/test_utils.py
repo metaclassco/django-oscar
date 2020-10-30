@@ -135,22 +135,21 @@ class TestLineOfferConsumer:
         # exclusive offer consumes one item on line1
         line1.consumer.consume(1, offer1)
 
-        # offer1 is exclusive so that blocks other offers
-        assert line1.is_available_for_offer_discount(offer2) is False
+        # offer1 consumed only one item, so other 9 are available for offer2
+        assert line1.is_available_for_offer_discount(offer2)
 
         line1.consumer.consume(99, offer1)
-        # ran out of room for offer1
+        # ran out of room for offer1 and offer2
         assert line1.is_available_for_offer_discount(offer1) is False
-        # offer2 was never an option
         assert line1.is_available_for_offer_discount(offer2) is False
 
         # exclusivity is per line so line2 is available for offer2
         line2.consumer.consume(1, offer2)
-        # nope: exclusive and non-exclusive don't mix
-        assert line2.is_available_for_offer_discount(offer1) is False
+        # offer2 consumed only one item, so other 19 are available for offer1
+        assert line2.is_available_for_offer_discount(offer1)
 
         line2.consumer.consume(99, offer2)
-        # ran out of room for offer2
+        # ran out of room for offer1
         assert line2.is_available_for_offer_discount(offer1) is False
         # but still room for offer3!
         assert line2.is_available_for_offer_discount(offer3) is True
@@ -178,8 +177,8 @@ class TestLineOfferConsumer:
         assert line1.quantity_with_offer_discount(offer3) == 0
 
         assert line1.quantity_without_offer_discount(offer1) == remaining1
-        assert line1.quantity_without_offer_discount(offer2) == 0
-        assert line1.quantity_without_offer_discount(offer3) == 0
+        assert line1.quantity_without_offer_discount(offer2) == remaining1
+        assert line1.quantity_without_offer_discount(offer3) == remaining1
 
         # exclusive offer consumes all items on line1
         line1.consumer.consume(remaining1, offer1)
@@ -199,7 +198,7 @@ class TestLineOfferConsumer:
         assert line2.quantity_with_offer_discount(offer2) == 1
         assert line2.quantity_with_offer_discount(offer3) == 0
 
-        assert line2.quantity_without_offer_discount(offer1) == 0
+        assert line2.quantity_without_offer_discount(offer1) == remaining2
         assert line2.quantity_without_offer_discount(offer2) == remaining2
         assert line2.quantity_without_offer_discount(offer3) == line2.quantity
 
@@ -249,10 +248,10 @@ class TestLineOfferConsumer:
         assert line1.quantity_with_offer_discount(offer3) == 0
         assert line1.quantity_with_offer_discount(offer4) == 0
 
-        assert line1.quantity_without_offer_discount(offer1) == 0
+        assert line1.quantity_without_offer_discount(offer1) == remaining1
         assert line1.quantity_without_offer_discount(offer2) == remaining1
         assert line1.quantity_without_offer_discount(offer3) == line1.quantity
-        assert line1.quantity_without_offer_discount(offer4) == 0
+        assert line1.quantity_without_offer_discount(offer4) == remaining1
 
         # combinable offer consumes one item of line1
         line1.consumer.consume(1, offer3)
@@ -261,10 +260,10 @@ class TestLineOfferConsumer:
         assert line1.quantity_with_offer_discount(offer3) == 1
         assert line1.quantity_with_offer_discount(offer4) == 0
 
-        assert line1.quantity_without_offer_discount(offer1) == 0
+        assert line1.quantity_without_offer_discount(offer1) == remaining1
         assert line1.quantity_without_offer_discount(offer2) == remaining1
         assert line1.quantity_without_offer_discount(offer3) == remaining1
-        assert line1.quantity_without_offer_discount(offer4) == 0
+        assert line1.quantity_without_offer_discount(offer4) == remaining1
 
         # combinable offer consumes all items of line1
         line1.consumer.consume(remaining1, offer2)

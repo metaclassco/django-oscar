@@ -57,9 +57,8 @@ class CountCondition(Condition):
             return getattr(self, '_num_matches')
         num_matches = 0
         for line in basket.all_lines():
-            if (self.can_apply_condition(line)
-                    and line.quantity_without_offer_discount(offer) > 0):
-                num_matches += line.quantity_without_offer_discount(offer)
+            if self.can_apply_condition(line):
+                num_matches += line.quantity_without_offer_discount(offer) + line.quantity_with_offer_discount(offer)
         self._num_matches = num_matches
         return num_matches
 
@@ -70,9 +69,12 @@ class CountCondition(Condition):
     def get_upsell_message(self, offer, basket):
         num_matches = self._get_num_matches(basket, offer)
         delta = self.value - num_matches
-        return ngettext('Buy %(delta)d more product from %(range)s',
-                        'Buy %(delta)d more products from %(range)s', delta) \
-            % {'delta': delta, 'range': self.range}
+        if delta > 0:
+            return ngettext(
+                'Buy %(delta)d more product from %(range)s',
+                'Buy %(delta)d more products from %(range)s',
+                delta
+            ) % {'delta': delta, 'range': self.range}
 
     def consume_items(self, offer, basket, affected_lines):
         """
@@ -154,9 +156,12 @@ class CoverageCondition(Condition):
 
     def get_upsell_message(self, offer, basket):
         delta = self.value - self._get_num_covered_products(basket, offer)
-        return ngettext('Buy %(delta)d more product from %(range)s',
-                        'Buy %(delta)d more products from %(range)s', delta) \
-            % {'delta': delta, 'range': self.range}
+        if delta > 0:
+            return ngettext(
+                'Buy %(delta)d more product from %(range)s',
+                'Buy %(delta)d more products from %(range)s',
+                delta
+            ) % {'delta': delta, 'range': self.range}
 
     def is_partially_satisfied(self, offer, basket):
         return 0 < self._get_num_covered_products(basket, offer) < self.value
@@ -265,9 +270,10 @@ class ValueCondition(Condition):
 
     def get_upsell_message(self, offer, basket):
         value_of_matches = self._get_value_of_matches(offer, basket)
-        return _('Spend %(value)s more from %(range)s') % {
-            'value': currency(self.value - value_of_matches),
-            'range': self.range}
+        if value_of_matches > 0:
+            return _('Spend %(value)s more from %(range)s') % {
+                'value': currency(self.value - value_of_matches),
+                'range': self.range}
 
     def consume_items(self, offer, basket, affected_lines):
         """
